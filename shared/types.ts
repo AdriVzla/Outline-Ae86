@@ -97,6 +97,7 @@ export enum MentionType {
   Group = "group",
   Issue = "issue",
   PullRequest = "pull_request",
+  Project = "project",
   URL = "url",
 }
 
@@ -201,6 +202,22 @@ export enum DocumentPermission {
 export enum GroupPermission {
   Member = "member",
   Admin = "admin",
+}
+
+/** Settings stored on an AuthenticationProvider for group synchronization. */
+export interface AuthenticationProviderSettings {
+  /** Whether group sync from this provider is enabled. */
+  groupSyncEnabled?: boolean;
+  /**
+   * The claim path in the OIDC userinfo/id_token response that contains
+   * group data (e.g. "groups", "roles", "custom.groups").
+   */
+  groupClaim?: string;
+  /**
+   * Additional scopes to request when group sync is enabled
+   * (e.g. "groups" for OIDC).
+   */
+  groupSyncScopes?: string[];
 }
 
 export type IntegrationSettings<T> = T extends IntegrationType.Embed
@@ -504,6 +521,7 @@ export enum UnfurlResourceType {
   Document = "document",
   Issue = "issue",
   PR = "pull",
+  Project = "project",
 }
 
 export type UnfurlResponse = {
@@ -514,6 +532,8 @@ export type UnfurlResponse = {
     url: string;
     /** A text title, describing the resource */
     title: string;
+    /** A color representing the resource */
+    color?: string;
     /** A brief description about the resource */
     description: string;
     /** A URL to a thumbnail image representing the resource */
@@ -608,6 +628,38 @@ export type UnfurlResponse = {
     state: { name: string; color: string; draft?: boolean };
     /** Pull Request creation time */
     createdAt: string;
+  };
+  [UnfurlResourceType.Project]: {
+    /** The resource type */
+    type: UnfurlResourceType.Project;
+    /** Project link */
+    url: string;
+    /** Project identifier */
+    id: string;
+    /** Project name */
+    name: string;
+    /** Project color */
+    color: string;
+    /** Project avatar URL */
+    avatarUrl?: string;
+    /** Project description */
+    description: string | null;
+    /** Project lead */
+    lead: { name: string; avatarUrl: string } | null;
+    /** Project state */
+    state: {
+      name: string;
+      color: string;
+      type: string;
+    };
+    /** Project labels */
+    labels: Array<{ name: string; color: string }>;
+    /** Project progress (0-1) */
+    progress?: number;
+    /** Project creation time */
+    createdAt: string;
+    /** Project target date */
+    targetDate: string | null;
   };
 };
 
