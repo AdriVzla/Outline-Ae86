@@ -7,19 +7,18 @@ WORKDIR $APP_PATH
 # Install build dependencies that might be needed for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# Copy dependency manifests first to leverage Docker cache
-# Quitamos COPY packages y plugins de aquí porque causan error si no existen o no son necesarios para install
-COPY package.json yarn.lock ./
+# 1. Copiamos todo el código fuente al contenedor inmediatamente
+COPY . .
 
-# Habilitar Corepack para que soporte la versión de Yarn definida en package.json (Yarn 4)
+# 2. LIMPIEZA CRÍTICA: Eliminamos la carpeta node_modules local que se copió.
+# Esto es vital porque tu carpeta node_modules de Windows corrompe la instalación en Linux.
+RUN rm -rf node_modules .yarn/cache .yarn/install-state.gz
+
+# 3. Habilitamos Corepack para usar la versión correcta de Yarn
 RUN corepack enable
 
-# Install all dependencies and build the application
-# This is the crucial step that compiles your modified code
+# 4. Instalamos las dependencias (ahora es seguro porque el entorno está limpio)
 RUN yarn install --frozen-lockfile
-
-# Copy the rest of your source code (incluyendo plugins, server, app, etc.)
-COPY . .
 
 RUN yarn build
 
