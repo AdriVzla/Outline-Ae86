@@ -35,6 +35,9 @@ ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
 ENV NODE_ENV=production
 
+# Disable Datadog tracing as it can interfere with module loading
+ENV DD_TRACE_ENABLED=false
+
 # Create a non-root user
 RUN addgroup --gid 1001 nodejs && \
     adduser --uid 1001 --ingroup nodejs nodejs && \
