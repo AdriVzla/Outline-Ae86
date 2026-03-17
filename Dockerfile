@@ -1,11 +1,23 @@
-ARG APP_PATH=/opt/outline
-ARG BASE_IMAGE=outlinewiki/outline-base
-FROM ${BASE_IMAGE} AS base
+# Stage 1: Build the application from your source code
+FROM node:22.21.0-slim AS builder
 
-ARG APP_PATH
+ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
 
+# Install build dependencies that might be needed for native modules
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+
+# Copy all your source code into the builder
+COPY . .
+
+# Install all dependencies and build the application
+# This is the crucial step that compiles your modified code
+RUN yarn install --frozen-lockfile
+RUN yarn build
+
 # ---
+
+# Stage 2: Create the final, lean production image
 FROM node:22.21.0-slim AS runner
 
 LABEL org.opencontainers.image.source="https://github.com/outline/outline"
@@ -14,24 +26,34 @@ ARG APP_PATH
 WORKDIR $APP_PATH
 ENV NODE_ENV=production
 
-# Create a non-root user compatible with Debian and BusyBox based images
+# Create a non-root user (same as your original Dockerfile)
 RUN addgroup --gid 1001 nodejs && \
     adduser --uid 1001 --ingroup nodejs nodejs && \
     mkdir -p /var/lib/outline && \
     chown -R nodejs:nodejs /var/lib/outline && \
     chown -R nodejs:nodejs $APP_PATH
 
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/build ./build
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/server ./server
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/public ./public
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
-COPY --from=base --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
+# Copy only the necessary built files from the builder stage
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/build ./build
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/server ./server
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/public ./public
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
+
+# Copy dependency manifests to install only production modules
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/yarn.lock ./yarn.lock
+# Outline uses workspaces, so we need the package.json files from the packages folder
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/packages/ ./packages/
+
+# Install ONLY production dependencies to keep the image small
+RUN yarn install --production --frozen-lockfile
+
 # Install wget to healthcheck the server
 RUN  apt-get update \
     && apt-get install -y wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Setup local file storage directory (same as your original Dockerfile)
 ENV FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
 RUN mkdir -p "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
     chown -R nodejs:nodejs "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
