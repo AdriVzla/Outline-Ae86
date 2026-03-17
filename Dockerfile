@@ -7,21 +7,20 @@ WORKDIR $APP_PATH
 # Install build dependencies that might be needed for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# 1. Copiamos el código fuente (el .dockerignore evitará que se copien node_modules locales)
+# 1. Copy dependency manifests first to leverage Docker's layer cache.
+COPY package.json yarn.lock ./
+
+# 2. Enable Corepack and install ALL dependencies.
+# This layer will be cached and only re-run if package.json or yarn.lock change.
+RUN corepack enable
+RUN yarn install --frozen-lockfile
+
+# 3. Copy the rest of the source code.
+# The .dockerignore file will prevent local node_modules, etc., from being copied.
 COPY . .
 
-# 2. Configuración de Yarn para producción en Linux
-# Forzamos 'node-modules' linker para evitar problemas de "state file"
-RUN corepack enable
-RUN echo "nodeLinker: node-modules" > .yarnrc.yml
-
-# 3. Instalamos dependencias
-# Usamos 'yarn install' simple para regenerar el lockfile si es necesario en Linux
-RUN yarn install
-
-# 4. Construimos la aplicación
-# Aumentamos la memoria disponible para el proceso de build para evitar crashes
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# 4. Build the application. This will run on every code change.
+# The NODE_OPTIONS is already in the package.json build script.
 RUN yarn build
 
 # ---
@@ -45,13 +44,16 @@ RUN addgroup --gid 1001 nodejs && \
     chown -R nodejs:nodejs /var/lib/outline && \
     chown -R nodejs:nodejs $APP_PATH
 
-# Copy built artifacts and production node_modules from the builder stage
+# Copy only the necessary built files and the full node_modules from the builder stage.
+# This is faster and more reliable than reinstalling production dependencies.
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/build ./build
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/server ./server
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/public ./public
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
+# Also copy the yarn lockfile for consistency
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/yarn.lock ./yarn.lock
 
 # Install wget to healthcheck the server
 RUN  apt-get update \
