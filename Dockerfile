@@ -8,12 +8,12 @@ WORKDIR $APP_PATH
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # 1. Copy dependency manifests first to leverage Docker's layer cache.
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc.yml* ./
+COPY patches ./patches/
 
 # 2. Enable Corepack and install ALL dependencies.
 # This layer will be cached and only re-run if package.json or yarn.lock change.
-RUN corepack enable
-RUN yarn install --frozen-lockfile
+RUN corepack enable && yarn install --frozen-lockfile
 
 # 3. Copy the rest of the source code.
 # The .dockerignore file will prevent local node_modules, etc., from being copied.
