@@ -7,12 +7,18 @@ WORKDIR $APP_PATH
 # Install build dependencies that might be needed for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# Copy all your source code into the builder
-COPY . .
+# Copy dependency manifests first to leverage Docker cache
+COPY package.json yarn.lock ./
+COPY packages ./packages
+COPY plugins ./plugins
 
 # Install all dependencies and build the application
 # This is the crucial step that compiles your modified code
 RUN yarn install --frozen-lockfile
+
+# Copy the rest of your source code
+COPY . .
+
 RUN yarn build
 
 # ---
@@ -22,7 +28,7 @@ FROM node:22.21.0-slim AS runner
 
 LABEL org.opencontainers.image.source="https://github.com/outline/outline"
 
-ARG APP_PATH
+ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
 ENV NODE_ENV=production
 
@@ -33,20 +39,13 @@ RUN addgroup --gid 1001 nodejs && \
     chown -R nodejs:nodejs /var/lib/outline && \
     chown -R nodejs:nodejs $APP_PATH
 
-# Copy only the necessary built files from the builder stage
+# Copy built artifacts and production node_modules from the builder stage
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/build ./build
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/server ./server
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/public ./public
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
-
-# Copy dependency manifests to install only production modules
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
-COPY --from=builder --chown=nodejs:nodejs $APP_PATH/yarn.lock ./yarn.lock
-# Outline uses workspaces, so we need the package.json files from the packages folder
-COPY --from=builder --chown=nodejs:nodejs $APP_PATH/packages/ ./packages/
-
-# Install ONLY production dependencies to keep the image small
-RUN yarn install --production --frozen-lockfile
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
 
 # Install wget to healthcheck the server
 RUN  apt-get update \
