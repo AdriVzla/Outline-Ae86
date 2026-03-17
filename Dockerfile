@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 # Quitamos COPY packages y plugins de aquí porque causan error si no existen o no son necesarios para install
 COPY package.json yarn.lock ./
 
+# Habilitar Corepack para que soporte la versión de Yarn definida en package.json (Yarn 4)
+RUN corepack enable
+
 # Install all dependencies and build the application
 # This is the crucial step that compiles your modified code
 RUN yarn install --frozen-lockfile
