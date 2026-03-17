@@ -7,19 +7,21 @@ WORKDIR $APP_PATH
 # Install build dependencies that might be needed for native modules
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# 1. Copiamos todo el código fuente al contenedor inmediatamente
+# 1. Copiamos el código fuente (el .dockerignore evitará que se copien node_modules locales)
 COPY . .
 
-# 2. LIMPIEZA CRÍTICA: Eliminamos la carpeta node_modules local que se copió.
-# Esto es vital porque tu carpeta node_modules de Windows corrompe la instalación en Linux.
-RUN rm -rf node_modules .yarn/cache .yarn/install-state.gz
-
-# 3. Habilitamos Corepack para usar la versión correcta de Yarn
+# 2. Configuración de Yarn para producción en Linux
+# Forzamos 'node-modules' linker para evitar problemas de "state file"
 RUN corepack enable
+RUN echo "nodeLinker: node-modules" > .yarnrc.yml
 
-# 4. Instalamos las dependencias (ahora es seguro porque el entorno está limpio)
-RUN yarn install --frozen-lockfile
+# 3. Instalamos dependencias
+# Usamos 'yarn install' simple para regenerar el lockfile si es necesario en Linux
+RUN yarn install
 
+# 4. Construimos la aplicación
+# Aumentamos la memoria disponible para el proceso de build para evitar crashes
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN yarn build
 
 # ---
