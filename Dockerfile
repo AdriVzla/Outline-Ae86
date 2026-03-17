@@ -8,15 +8,14 @@ WORKDIR $APP_PATH
 RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency manifests first to leverage Docker cache
+# Quitamos COPY packages y plugins de aquí porque causan error si no existen o no son necesarios para install
 COPY package.json yarn.lock ./
-COPY packages ./packages
-COPY plugins ./plugins
 
 # Install all dependencies and build the application
 # This is the crucial step that compiles your modified code
 RUN yarn install --frozen-lockfile
 
-# Copy the rest of your source code
+# Copy the rest of your source code (incluyendo plugins, server, app, etc.)
 COPY . .
 
 RUN yarn build
@@ -32,7 +31,7 @@ ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
 ENV NODE_ENV=production
 
-# Create a non-root user (same as your original Dockerfile)
+# Create a non-root user
 RUN addgroup --gid 1001 nodejs && \
     adduser --uid 1001 --ingroup nodejs nodejs && \
     mkdir -p /var/lib/outline && \
@@ -52,7 +51,7 @@ RUN  apt-get update \
     && apt-get install -y wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Setup local file storage directory (same as your original Dockerfile)
+# Setup local file storage directory
 ENV FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
 RUN mkdir -p "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
     chown -R nodejs:nodejs "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
