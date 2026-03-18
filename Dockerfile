@@ -19,9 +19,13 @@ RUN corepack enable && yarn install --frozen-lockfile
 # The .dockerignore file will prevent local node_modules, etc., from being copied.
 COPY . .
 
-# 4. Build the application. This will run on every code change.
-# The NODE_OPTIONS is already in the package.json build script.
-RUN yarn build
+# 4. Build the application.
+# Set memory limit globally for build steps to prevent crashes
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Run build steps sequentially for better log visibility and memory management
+RUN yarn vite:build
+RUN yarn build:i18n
+RUN yarn build:server
 
 # ---
 
