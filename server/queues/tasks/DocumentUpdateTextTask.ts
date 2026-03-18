@@ -1,4 +1,3 @@
-import { franc } from "franc";
 import { iso6393To1 } from "iso-639-3";
 import { Node } from "prosemirror-model";
 import { schema, serializer } from "@server/editor";
@@ -6,6 +5,25 @@ import { Document } from "@server/models";
 import type { DocumentEvent } from "@server/types";
 import { DocumentHelper } from "@server/models/helpers/DocumentHelper";
 import { BaseTask } from "./base/BaseTask";
+
+interface FrancModule {
+  franc: (
+    text: string,
+    options?: {
+      minLength?: number;
+    }
+  ) => string;
+}
+
+let francModule: Promise<FrancModule> | undefined;
+
+const getFrancModule = () => {
+  if (!francModule) {
+    francModule = import("franc") as Promise<FrancModule>;
+  }
+
+  return francModule;
+};
 
 export default class DocumentUpdateTextTask extends BaseTask<DocumentEvent> {
   public async perform(event: DocumentEvent) {
@@ -17,6 +35,7 @@ export default class DocumentUpdateTextTask extends BaseTask<DocumentEvent> {
     const node = Node.fromJSON(schema, document.content);
     document.text = serializer.serialize(node);
 
+    const { franc } = await getFrancModule();
     const language = franc(DocumentHelper.toPlainText(document), {
       minLength: 50,
     });
