@@ -51,9 +51,11 @@ COPY --from=builder --chown=nodejs:nodejs $APP_PATH/server ./server
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/public ./public
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
-COPY --from=builder --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
 # Also copy the yarn lockfile for consistency
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/yarn.lock ./yarn.lock
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.yarnrc.yml ./.yarnrc.yml
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.yarn ./.yarn
+COPY --from=builder --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
 
 # Install wget to healthcheck the server
 RUN  apt-get update \
