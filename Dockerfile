@@ -1,5 +1,5 @@
 # Stage 1: Build the application from your source code
-FROM node:20.18.0-slim AS builder
+FROM node:22.14.0-slim AS builder
 
 ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
@@ -58,11 +58,14 @@ COPY --from=builder --chown=nodejs:nodejs $APP_PATH/server ./server
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/public ./public
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.sequelizerc ./.sequelizerc
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/package.json ./package.json
-# Also copy the yarn lockfile for consistency
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/yarn.lock ./yarn.lock
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.yarnrc.yml ./.yarnrc.yml
 COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.yarn ./.yarn
-COPY --from=builder --chown=nodejs:nodejs $APP_PATH/node_modules ./node_modules
+
+# Copiamos los parches necesarios para la instalación
+COPY patches ./patches/
+# Reinstalamos dependencias de producción para asegurar compatibilidad con Node 20
+RUN corepack enable && yarn install --frozen-lockfile --production
 
 # Install wget to healthcheck the server
 RUN  apt-get update \
@@ -74,9 +77,6 @@ ENV FILE_STORAGE_LOCAL_ROOT_DIR=/var/lib/outline/data
 RUN mkdir -p "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
     chown -R nodejs:nodejs "$FILE_STORAGE_LOCAL_ROOT_DIR" && \
     chmod 1777 "$FILE_STORAGE_LOCAL_ROOT_DIR"
-
-# Habilitar Corepack también en la imagen final para poder usar 'yarn' en el arranque
-RUN corepack enable
 
 USER nodejs
 
