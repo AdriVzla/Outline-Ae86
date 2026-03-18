@@ -1,5 +1,5 @@
 # Stage 1: Build the application from your source code
-FROM node:22.21.0-slim AS builder
+FROM node:20.18.0-slim AS builder
 
 ARG APP_PATH=/opt/outline
 WORKDIR $APP_PATH
@@ -26,7 +26,7 @@ RUN yarn build
 # ---
 
 # Stage 2: Create the final, lean production image
-FROM node:22.21.0-slim AS runner
+FROM node:20.18.0-slim AS runner
 
 LABEL org.opencontainers.image.source="https://github.com/outline/outline"
 
