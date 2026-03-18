@@ -20,10 +20,13 @@ RUN corepack enable && yarn install --frozen-lockfile
 COPY . .
 
 # 4. Build the application.
-# Set memory limit globally for build steps to prevent crashes
-ENV NODE_OPTIONS="--max-old-space-size=4096"
-# Run build steps sequentially for better log visibility and memory management
-RUN yarn vite:build
+# Set memory limit to 3GB to prevent hitting container limits (leaving room for OS)
+ENV NODE_OPTIONS="--max-old-space-size=3072"
+# Force production build behavior
+ENV NODE_ENV=production
+
+# Run build steps sequentially. Disable sourcemaps to save memory.
+RUN yarn vite:build --sourcemap=false
 RUN yarn build:i18n
 RUN yarn build:server
 
