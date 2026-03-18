@@ -13,7 +13,7 @@ COPY patches ./patches/
 
 # 2. Enable Corepack and install ALL dependencies.
 # This layer will be cached and only re-run if package.json or yarn.lock change.
-RUN corepack enable && yarn install --frozen-lockfile
+RUN corepack enable && yarn install --immutable
 
 # 3. Copy the rest of the source code.
 # The .dockerignore file will prevent local node_modules, etc., from being copied.
@@ -65,7 +65,7 @@ COPY --from=builder --chown=nodejs:nodejs $APP_PATH/.yarn ./.yarn
 # Copiamos los parches necesarios para la instalación
 COPY patches ./patches/
 # Reinstalamos dependencias de producción para asegurar compatibilidad con Node 20
-RUN corepack enable && yarn install --frozen-lockfile --production
+RUN corepack enable && yarn install --immutable && yarn workspaces focus --production && yarn cache clean
 
 # Install wget to healthcheck the server
 RUN  apt-get update \
