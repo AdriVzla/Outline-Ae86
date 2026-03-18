@@ -7,7 +7,6 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth2";
 import { languages } from "@shared/i18n";
 import { slugifyDomain } from "@shared/utils/domains";
 import accountProvisioner from "@server/commands/accountProvisioner";
-import { GmailAccountCreationError } from "@server/errors";
 import passportMiddleware from "@server/middlewares/passport";
 import { AuthenticationProvider, User } from "@server/models";
 import { createContext } from "@server/context";
@@ -71,25 +70,7 @@ if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
 
           // No profile domain means personal gmail account
           // No team implies the request came from the apex domain
-          //
-          // Allow signing in with a personal account only if the user already
-          // exists in a workspace. Creating a new workspace via a personal gmail
-          // account is not allowed.
-          if (!domain && !team) {
-            const userExists = await User.count({
-              where: { email: profile.email.toLowerCase() },
-              include: [
-                {
-                  association: "team",
-                  required: true,
-                },
-              ],
-            });
-
-            if (!userExists) {
-              throw GmailAccountCreationError();
-            }
-          }
+          // Personal Gmail accounts are allowed.
 
           // remove the TLD and form a subdomain from the remaining
           // subdomains of the form "foo.bar.com" are allowed as primary Google Workspaces domains
