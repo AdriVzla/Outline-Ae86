@@ -4,7 +4,6 @@ import type https from "node:https";
 import nodeFetch, { type RequestInit, type Response } from "node-fetch";
 import { getProxyForUrl } from "proxy-from-env";
 import tunnelAgent, { type TunnelAgent } from "tunnel-agent";
-import { useAgent as useFilteringAgent } from "request-filtering-agent";
 import env from "@server/env";
 import { InternalError } from "@server/errors";
 import Logger from "@server/logging/Logger";
@@ -13,6 +12,27 @@ import { capitalize } from "lodash";
 interface UrlWithTunnel extends URL {
   tunnelMethod?: string;
 }
+
+interface RequestFilteringAgentModule {
+  useAgent: (
+    url: string,
+    options: Record<string, unknown>
+  ) => http.Agent | https.Agent;
+}
+
+let requestFilteringAgentModule:
+  | Promise<RequestFilteringAgentModule>
+  | undefined;
+
+const getRequestFilteringAgentModule = () => {
+  if (!requestFilteringAgentModule) {
+    requestFilteringAgentModule = import(
+      "request-filtering-agent"
+    ) as Promise<RequestFilteringAgentModule>;
+  }
+
+  return requestFilteringAgentModule;
+};
 
 const DefaultOptions = {
   keepAlive: true,
@@ -80,7 +100,7 @@ export default async function fetch(
         ...rest?.headers,
       },
       signal,
-      agent: buildAgent(url, { signal, allowPrivateIPAddress }),
+      agent: await buildAgent(url, { signal, allowPrivateIPAddress }),
     });
 
     if (!response.ok) {
@@ -174,7 +194,7 @@ const buildTunnel = (proxy: UrlWithTunnel, options: RequestInit) => {
  * @param options.allowPrivateIPAddress Whether to allow requests to private IP addresses.
  * @returns An http or https agent configured for the URL.
  */
-function buildAgent(
+async function buildAgent(
   url: string,
   options: {
     signal?: AbortSignal | null;
@@ -185,6 +205,8 @@ function buildAgent(
   const parsedURL = new URL(url);
   const proxyURL = getProxyForUrl(parsedURL.href);
   let agent: https.Agent | http.Agent | undefined;
+  const { useAgent: useFilteringAgent } =
+    await getRequestFilteringAgentModule();
 
   // Add allowIPAddressList from environment configuration
   const filteringOptions = {
