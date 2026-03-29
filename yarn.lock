@@ -17911,7 +17911,7 @@ __metadata:
     ws: "npm:^7.5.10"
     y-indexeddb: "npm:^9.0.11"
     y-prosemirror: "npm:^1.3.7"
-    y-protocols: "npm:^1.0.6"
+    y-protocols: "npm:^1.0.7"
     yauzl: "npm:^3.2.0"
     yjs: "npm:^13.6.1"
     zod: "npm:^4.2.1"
@@ -23258,14 +23258,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"y-protocols@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "y-protocols@npm:1.0.6"
+"y-protocols@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "y-protocols@npm:1.0.7"
   dependencies:
     lib0: "npm:^0.2.85"
   peerDependencies:
     yjs: ^13.0.0
-  checksum: 10c0/fae7d63d4609e75eac8114320aa3581311993cd0c1b7ac03d13dc30c9a95d7b1680e4500786bb417c1fb3d11a69e1bed3e50d08e15febde9b8abf70f133eb917
+  checksum: 10c0/70e14ab50b9200e97602c5effc3e14ae4ea0f51479a1628569af7cc12a6739fbc02484335828f5c508a4bf6fa0c3ef5ae1c17e13346b7a6093abeb9627f59021
   languageName: node
   linkType: hard
 
