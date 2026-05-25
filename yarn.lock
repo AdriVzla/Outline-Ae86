@@ -11822,10 +11822,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"diff@npm:^5.2.0":
-  version: 5.2.0
-  resolution: "diff@npm:5.2.0"
-  checksum: 10c0/aed0941f206fe261ecb258dc8d0ceea8abbde3ace5827518ff8d302f0fc9cc81ce116c4d8f379151171336caf0516b79e01abdc1ed1201b6440d895a66689eb4
+"diff@npm:^5.2.2":
+  version: 5.2.2
+  resolution: "diff@npm:5.2.2"
+  checksum: 10c0/52da594c54e9033423da26984b1449ae6accd782d5afc4431c9a192a8507ddc83120fe8f925d7220b9da5b5963c7b6f5e46add3660a00cb36df7a13420a09d4b
   languageName: node
   linkType: hard
 
@@ -17746,7 +17746,7 @@ __metadata:
     crypto-js: "npm:^4.2.0"
     date-fns: "npm:^3.6.0"
     dd-trace: "npm:^5.82.0"
-    diff: "npm:^5.2.0"
+    diff: "npm:^5.2.2"
     discord-api-types: "npm:^0.38.36"
     email-providers: "npm:^1.14.0"
     emoji-mart: "npm:^5.6.0"
