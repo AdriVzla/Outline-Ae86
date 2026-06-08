@@ -4377,15 +4377,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mermaid-js/layout-elk@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@mermaid-js/layout-elk@npm:0.2.0"
+"@mermaid-js/layout-elk@npm:^0.2.1":
+  version: 0.2.1
+  resolution: "@mermaid-js/layout-elk@npm:0.2.1"
   dependencies:
     d3: "npm:^7.9.0"
     elkjs: "npm:^0.9.3"
   peerDependencies:
     mermaid: ^11.0.2
-  checksum: 10c0/d4938770adc669dd7e271aa0688838c9c1ff47c75479ab0385dc51c7a4e5e5fc1df3ea9913c1493709b4640fd50064db181a42c1b36d005f20cb8e2537570b29
+  checksum: 10c0/3594aa2dde6f3f0243af0cfe6ea47dbee2b66276ef8c90e638114d78c9856f511e33e574b378005ab6dfb46eb5ed27fd1ab281641c6f90bfa431245acc57b498
   languageName: node
   linkType: hard
 
@@ -17628,7 +17628,7 @@ __metadata:
     "@hocuspocus/server": "npm:1.1.2"
     "@juggle/resize-observer": "npm:^3.4.0"
     "@linear/sdk": "npm:^58.1.0"
-    "@mermaid-js/layout-elk": "npm:^0.2.0"
+    "@mermaid-js/layout-elk": "npm:^0.2.1"
     "@modelcontextprotocol/sdk": "npm:^1.25.1"
     "@node-oauth/oauth2-server": "npm:^5.2.0"
     "@notionhq/client": "npm:^2.3.0"
